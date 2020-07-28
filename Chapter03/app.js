@@ -1,8 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
-const Blog = require('./models/blog')
-//const { allowedNodeEnvironmentFlags } = require('process');
+const blogRoutes = require('./routes/blogRoutes');
 
 //express app 
 const app = express();
@@ -18,47 +17,10 @@ app.set('view engine', 'ejs');
 
 // middleware & static files 
 app.use(express.static('public'));   // css, js, 이미지 등등 를 public 폴더에 넣으면 접근 가능 
+app.use(express.urlencoded({ extended: true}));  // POST로 들어온 DATA를 Encoding 해주는 것 같은..
 
 // log 
 app.use(morgan('dev'));
-
-// mongoose and mongo sandbox routes 
-app.get('/add-blog', (req, res) => {   // /add-blog 로 접속하면 database에 data 보내짐 
-    const blog = new Blog({
-        title: 'new blog',
-        snippet: 'about my new blog',
-        body: 'more about my new blog'
-    });
-
-    blog.save()
-        .then((result) => {
-            res.send(result);   // db로 data 보내기 
-        })
-        .catch((err) => {
-            console.log(err);
-        })
-});
-
-app.get('/all-blogs', (req,res) => {     // db에서 data 가져오기 
-    Blog.find()
-        .then((result) => {
-            res.send(result);
-        })
-        .catch((err) => {
-            console.log(err);
-        })
-});
-
-app.get('/single-blog', (req,res) => {
-    Blog.findById('5f1edc2b20eda41a80b788b0')
-        .then((result) => {
-            res.send(result);
-        })
-        .catch((err) => {
-            console.log(err);
-        });
-})
-
 
 // routes 
 app.get('/', (req, res) => {
@@ -77,21 +39,8 @@ app.get('/about', (req, res) => {
 });
 
 
-// blog routes 
-app.get('/blogs', (req,res) => {
-    Blog.find().sort({ createdAt: -1 }) // 시간대별 내림차순 
-        .then((result) => {
-            res.render('index', { title: 'All Blogs', blogs: result});
-        })
-        .catch((err) => {
-            console.log(err);
-        })
-});
-
-
-app.get('/blogs/create', (req,res) => {
-    res.render('create', { title: 'Create a new Blog' });
-});
+// blog route 
+app.use('/blogs', blogRoutes);
 
 // 404 page 
 app.use((req, res) => {
